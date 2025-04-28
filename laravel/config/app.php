@@ -84,6 +84,8 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    'ukrainian_language_id' => 4, // ukrainian language_id in opencart database
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key
