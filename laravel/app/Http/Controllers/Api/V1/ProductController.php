@@ -4,7 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductDescription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use App\Models\Category;
+use App\Http\Components\Translit;
+use Illuminate\Support\Facades\Config;
 
 class ProductController extends Controller
 {
@@ -13,7 +18,9 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        $product = Product::first();
+        dd($product);
+        die;
     }
 
     /**
@@ -22,8 +29,69 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $rules = [
-
+            'sku' => 'required|unique:oc_product|max:255',
+            'quantity' => 'required|integer',
+            'price'  => 'required|numeric',
+            'image' => 'required|extensions:jpg,png',
+            'name' => 'required|max:255',
+            'description' => 'nullable',
+            'meta_title' => 'nullable',
+            'meta_description' => 'nullable',
+            'category_id' => 'nullable|integer',
         ];
+        $validator = Validator::make($request->all(), $rules);
+
+        if($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'info' => $validator->errors(),
+            ], 400);
+        }
+
+        $product_id = Product::max('product_id') + 1;
+        $product_alias = Translit::makeTranslit($request->name);
+
+        $product = new Product;
+        $product->product_id = $product_id;
+        $product->sku = $request->sku;
+        $product->quantity = $request->quantity;
+        $product->price = $request->price;
+        $image_name = $product_id  . '-' . $product_alias . '.' . $request->file('image')->extension();
+        $request->file('image')->move(env('IMAGE_DIR'), $image_name);
+        $product->image = 'catalog/' . $image_name;
+
+        if(!$product->save()) {
+            return response()->json([
+                'status' => 'error',
+                'info' => ['Unrecognized error. Cannot save product.'],
+            ], 500);
+        }
+
+        $info = [
+            'product' => [
+                'id' => $product_id,
+            ]
+        ];
+
+        $product_description = new ProductDescription;
+        $product_description->product_id = $product_id;
+        $product_description->language_id = Config::get('app.ukrainian_language_id');
+        $product_description->name = $request->name;
+        $product_description->description = $request->description ?? '';
+        $product_description->meta_title = $request->description ?? $request->name;
+        $product_description->meta_description = $request->description ?? '';
+        $product_description->save();
+        /*
+        if(!empty($request->category_id)) {
+            $category = Category::where('category_id', $request->category_id)->first();
+        } else {
+            $info[] = '';
+        }
+        */
+        return response()->json([
+            'status' => 'success',
+            'info' => $info,
+        ], 201);
     }
 
     /**
