@@ -81,13 +81,19 @@ class ProductController extends Controller
         $product_description->meta_title = $request->description ?? $request->name;
         $product_description->meta_description = $request->description ?? '';
         $product_description->save();
-        /*
+
         if(!empty($request->category_id)) {
             $category = Category::where('category_id', $request->category_id)->first();
+            if(empty($category)) {
+                $info[] = 'Category with ID ' . $request->category_id . ' not found. No category defined for product. Product will not be accessable on site.';
+            } else {
+                $product->addCategory($category);
+                $info['product']['url'] = $product->getUrl();
+            }
         } else {
-            $info[] = '';
+            $info[] = 'No category defined for product. Product will not be accessable on site.';
         }
-        */
+
         return response()->json([
             'status' => 'success',
             'info' => $info,
@@ -99,7 +105,23 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        if(!empty($product)) {
+            return [
+                'id' => $product->product_id,
+                'sku' => $product->sku,
+                'quantity' => $product->quantity,
+                'price' => $product->price,
+                'image' => Config::get('app.url') . '/image/' . $product->image,
+                'name' => $product->description->name,
+                'description' => $product->description->description,
+                'meta_title' => $product->description->meta_title,
+                'meta_description' => $product->description->meta_description,
+            ];
+        }
+
+        return response()->json([
+            'status' => 'error',
+        ], 404);
     }
 
     /**

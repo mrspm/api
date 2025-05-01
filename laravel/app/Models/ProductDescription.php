@@ -19,6 +19,6 @@ class ProductDescription extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->BelongsTo(Product::class);
+        return $this->BelongsTo(Product::class, 'product_id', 'product_id');
     }
 }

@@ -10,6 +10,10 @@ class SiteController extends Controller
 {
     public function index()
     {
+        $product = Product::where('product_id', 17297)->first();
+        dd($product->getUrl());
+
+        /*
         $host = 'https://api.loc/api';
         $url = $host . '/v1/products';
 
@@ -22,7 +26,7 @@ class SiteController extends Controller
             'quantity' => 0,
             'price' => 27,
             'category_id' => 3753872,
-            'image' => new \CurlFile('D:/i.jpg', 'image/jpg', 'i.jpg'),
+            'image' => new \CurlFile('D:/t.jpg', 'image/jpg', 't.jpg'),
         ];
 
         $ch = curl_init();
@@ -36,6 +40,7 @@ class SiteController extends Controller
         curl_close($ch);
 
         return json_decode($result);
+        */
     }
 
     /*
