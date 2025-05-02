@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductDescription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use App\Models\Category;
 use App\Http\Components\Translit;
 use Illuminate\Support\Facades\Config;
@@ -35,8 +36,8 @@ class ProductController extends Controller
             'image' => 'required|extensions:jpg,png',
             'name' => 'required|max:255',
             'description' => 'nullable',
-            'meta_title' => 'nullable',
-            'meta_description' => 'nullable',
+            'meta_title' => 'nullable|max:255',
+            'meta_description' => 'nullable|max:255',
             'category_id' => 'nullable|integer',
         ];
         $validator = Validator::make($request->all(), $rules);
@@ -116,6 +117,13 @@ class ProductController extends Controller
                 'description' => $product->description->description,
                 'meta_title' => $product->description->meta_title,
                 'meta_description' => $product->description->meta_description,
+                'url' => $product->getUrl(),
+                'category' => [
+                    'id' => $product->getCategory()->category_id,
+                    'name' => $product->getCategory()->description->name ?? null,
+                ],
+                'date_added' => $product->date_added,
+                'date_modified' => $product->date_modified,
             ];
         }
 
@@ -129,7 +137,52 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        $rules = [
+            'sku' => ['nullable', 'max:255', Rule::unique('oc_product')->ignore($product->product_id, 'product_id')],
+            'quantity' => 'nullable|integer',
+            'price'  => 'nullable|numeric',
+            'name' => 'nullable|max:255',
+            'description' => 'nullable',
+            'meta_title' => 'nullable|max:255',
+            'meta_description' => 'nullable|max:255',
+            'category_id' => 'nullable|integer',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+
+        if($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'info' => $validator->errors(),
+            ], 400);
+        }
+
+        $product->update($request->all());
+
+        if(isset($request->name)) $product->description->name = $request->name;
+        if(isset($request->description)) $product->description->description = $request->description;
+        if(isset($request->name)) $product->description->meta_title = $request->meta_title;
+        if(isset($request->name)) $product->description->meta_description = $request->meta_description;
+
+        if(!empty($request->category_id)) {
+            $category = Category::where('category_id', $request->category_id)->first();
+            if(empty($category)) {
+                $info[] = 'Category with ID ' . $request->category_id . ' not found. Product category not updated.';
+            } else {
+                $product->addCategory($category);
+            }
+        }
+
+        $info = [
+            'product' => [
+                'id' => $product->product_id,
+                'url' => $product->getUrl(),
+            ],
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'info' => $info,
+        ], 200);
     }
 
     /**
@@ -137,6 +190,10 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        return response()->json([
+            'status' => 'error',
+            'info' => 'Only administrators can delete products.'
+        ], 403);
     }
 }
+

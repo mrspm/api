@@ -15,6 +15,7 @@ class Product extends Model
 
     protected $table = 'oc_product';
     protected $primaryKey = 'product_id';
+    protected $guarded = ['product_id'];
 
     const CREATED_AT = 'date_added';
     const UPDATED_AT = 'date_modified';
@@ -44,6 +45,8 @@ class Product extends Model
      */
     public function addCategory(Category $category): void
     {
+        DB::table('oc_product_to_category')->where('product_id', $this->product_id)->delete();
+
         DB::table('oc_product_to_category')->insert([
             'product_id' => $this->product_id,
             'category_id' => $category->category_id,
@@ -66,10 +69,11 @@ class Product extends Model
         $product_path = '';
 
         $seo_url = SeoUrl::where('query', 'product_id=' . $this->product_id)->where('language_id', Config::get('app.ukrainian_language_id'))->first();
-        if(empty($seo_url)) return Config::get('app.url');
+        if(empty($seo_url)) return '';
         $product_path = $seo_url->keyword;
 
         $category = $this->getCategory();
+        if(empty($category)) return '';
 
         $seo_url = SeoUrl::where('query', 'category_id=' . $category->category_id)->where('language_id', Config::get('app.ukrainian_language_id'))->first();
         if(!empty($seo_url)) $product_path = $seo_url->keyword . '/' . $product_path;
