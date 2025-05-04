@@ -79,8 +79,8 @@ class ProductController extends Controller
         $product_description->language_id = Config::get('app.ukrainian_language_id');
         $product_description->name = $request->name;
         $product_description->description = $request->description ?? '';
-        $product_description->meta_title = $request->description ?? $request->name;
-        $product_description->meta_description = $request->description ?? '';
+        $product_description->meta_title = $request->meta_title ?? $request->name;
+        $product_description->meta_description = $request->meta_description ?? '';
         $product_description->save();
 
         if(!empty($request->category_id)) {
@@ -138,7 +138,7 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $rules = [
-            'sku' => ['nullable', 'max:255', Rule::unique('oc_product')->ignore($product->product_id, 'product_id')],
+            'sku' => ['nullable', 'max:255', Rule::unique('oc_product')->ignore($product->product_id, "product_id")],
             'quantity' => 'nullable|integer',
             'price'  => 'nullable|numeric',
             'name' => 'nullable|max:255',
