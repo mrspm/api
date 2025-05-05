@@ -14,14 +14,17 @@ use Illuminate\Support\Facades\Config;
 
 class ProductController extends Controller
 {
+    private const PRODUCTS_PER_PAGE = 50;
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $product = Product::first();
-        dd($product);
-        die;
+        return Product::LeftJoin('oc_product_description', 'oc_product_description.product_id', '=', 'oc_product.product_id')
+            ->select('oc_product.product_id as id', 'oc_product_description.name as name', 'quantity', 'price', 'date_added', 'date_modified')
+            ->where('language_id', Config::get('app.ukrainian_language_id'))
+            ->paginate(self::PRODUCTS_PER_PAGE);
     }
 
     /**
