@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDescription;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Models\Category;
 use App\Http\Components\Translit;
 use Illuminate\Support\Facades\Config;
 
@@ -92,6 +92,7 @@ class ProductController extends Controller
                 $info[] = 'Category with ID ' . $request->category_id . ' not found. No category defined for product. Product will not be accessable on site.';
             } else {
                 $product->addCategory($category);
+                $product->saveAlias();
                 $info['product']['url'] = $product->getUrl();
             }
         } else {
@@ -110,7 +111,7 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         if(!empty($product)) {
-            return [
+            $data = [
                 'id' => $product->product_id,
                 'sku' => $product->sku,
                 'quantity' => $product->quantity,
@@ -128,6 +129,11 @@ class ProductController extends Controller
                 'date_added' => $product->date_added,
                 'date_modified' => $product->date_modified,
             ];
+
+            return response()->json([
+                'status' => 'success',
+                'product' => $data,
+            ], 201);
         }
 
         return response()->json([
@@ -165,6 +171,7 @@ class ProductController extends Controller
         if(isset($request->description)) $product->description->description = $request->description;
         if(isset($request->name)) $product->description->meta_title = $request->meta_title;
         if(isset($request->name)) $product->description->meta_description = $request->meta_description;
+        $product->description->save();
 
         if(!empty($request->category_id)) {
             $category = Category::where('category_id', $request->category_id)->first();

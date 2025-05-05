@@ -51,7 +51,13 @@ class Product extends Model
             'product_id' => $this->product_id,
             'category_id' => $category->category_id,
         ]);
+    }
 
+    /*
+     * save product alias
+     */
+    public function saveAlias(): void
+    {
         SeoUrl::where('query', 'product_id=' . $this->product_id)->delete();
 
         $seo_url = new SeoUrl;
