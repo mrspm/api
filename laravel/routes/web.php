@@ -18,10 +18,10 @@ use App\Http\Controllers\Admin\SiteController as AdminSiteController;
 |
 */
 
-Route::get('/', [SiteController::class, 'index'])->name('home');
-/*
+//Route::get('/', [SiteController::class, 'index'])->name('home');
+
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [UserController::class, 'login'])->name('login');
     Route::post('/login', [UserController::class, 'loginUser'])->name('login-user');
 });
-*/
+
