@@ -12,7 +12,11 @@ class UserController extends Controller
 
     public function login()
     {
-        return view('users.login-form');
+        return response()->json([
+            'message' => 'Unauthenticated.',
+        ], 401);
+
+        //return view('users.login-form');
     }
 
 
